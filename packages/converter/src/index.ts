@@ -11,3 +11,4 @@ export * from './convert.ts';
 export * from './page.ts';
 export * from './prune-scope.ts';
 export * from './verify.ts';
+export * from './thumbs.ts';

@@ -3,7 +3,7 @@ import { Pipeline, sha1, type StageDef } from '@sf/core';
 import { buildSnapshot, captureSnapshot, rawFromSavedPage, rawFromUrl } from '@sf/crawler';
 import { extractDesignTokens, renderStyleguide, tokensToCss } from '@sf/design';
 import type { DesignTokens, SectionIR } from '@sf/core';
-import { captureVerification, convertSections, renderDocument, type ConvertResult } from '@sf/converter';
+import { captureThumbnails, captureVerification, convertSections, renderDocument, type ConvertResult } from '@sf/converter';
 import { buildShopify, diffPng } from '@sf/shopify';
 
 async function fileKey(path?: string): Promise<string> {
@@ -111,6 +111,17 @@ export function buildPipeline(): Pipeline {
           log.info(`${s.key.padEnd(8)} ${s.viewport.padEnd(7)} pixel diff ${(d.ratio * 100).toFixed(2).padStart(6)}%  height Δ ${dh}px`);
         }
         await ws.writeJson('verify/report.json', rows);
+      },
+    },
+    {
+      name: 'thumbs',
+      dependsOn: ['clone'],
+      outputs: ['sections/thumbs.json'],
+      cacheKey: () => sourceVersion(),
+      run: async ({ ws, recipe, log }) => {
+        const { sections } = await loadSections(ws);
+        const thumbs = await captureThumbnails(ws, recipe, sections, log);
+        log.info(`${Object.keys(thumbs).length} thumbnails`);
       },
     },
     {

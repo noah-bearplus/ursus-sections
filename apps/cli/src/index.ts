@@ -3,8 +3,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { Command } from 'commander';
 import { createLogger, LocalQueue, Workspace, type Recipe } from '@sf/core';
-import { closeBrowser } from '@sf/crawler';
-import { buildCatalog } from '@sf/catalog';
+import { closeBrowser, serveDir } from '@sf/crawler';
+import { buildCatalog, buildHub } from '@sf/catalog';
 import { analyzeTheme } from '@sf/shopify';
 import { buildPipeline } from './stages.ts';
 
@@ -73,24 +73,59 @@ program
     }
   });
 
+async function projectIds(): Promise<string[]> {
+  return (await readdir(join(WORKDIR, 'projects')).catch(() => [] as string[])).sort();
+}
+
+async function writeCatalog(out: string, profile?: string): Promise<number> {
+  const projects = [];
+  for (const id of await projectIds()) {
+    const ws = Workspace.forProject(WORKDIR, id);
+    if (!(await ws.exists('sections', 'index.json'))) continue;
+    const slugs = await ws.list('shopify');
+    const profileSlug = profile && slugs.includes(profile) ? profile : slugs[0];
+    if (!profileSlug) continue;
+    projects.push({ id, ws, profileSlug });
+  }
+  const entries = await buildCatalog(new Workspace(out), { projects });
+  console.log(`catalog: ${entries.length} sections from ${projects.length} project(s) → ${resolve(out)}/index.html`);
+  return entries.length;
+}
+
 program
   .command('catalog')
   .description('Build the static section library from every converted project')
   .option('--profile <slug>', 'Shopify profile folder to read Liquid from (e.g. dawn, generic-os-2-0)')
   .option('--out <dir>', 'output directory', join(WORKDIR, 'catalog'))
   .action(async (opts: { profile?: string; out: string }) => {
-    const ids = (await readdir(join(WORKDIR, 'projects')).catch(() => [] as string[])).sort();
+    await writeCatalog(opts.out, opts.profile);
+  });
+
+program
+  .command('serve')
+  .description('Serve every output (clone, styleguide, fidelity report, Liquid, catalog) on a local URL')
+  .option('--port <n>', 'port', '4321')
+  .option('--host <host>', 'interface to listen on (0.0.0.0 to open it from other devices)', '127.0.0.1')
+  .option('--profile <slug>', 'Shopify profile the catalog shows when it has to be built')
+  .action(async (opts: { port: string; host: string; profile?: string }) => {
+    const home = new Workspace(WORKDIR);
+    // Rebuilt on every start so it never shows results older than the last pipeline run.
+    await writeCatalog(home.path('catalog'), opts.profile);
     const projects = [];
-    for (const id of ids) {
+    for (const id of await projectIds()) {
       const ws = Workspace.forProject(WORKDIR, id);
-      if (!(await ws.exists('sections', 'index.json'))) continue;
-      const slugs = await ws.list('shopify');
-      const profileSlug = opts.profile && slugs.includes(opts.profile) ? opts.profile : slugs[0];
-      if (!profileSlug) continue;
-      projects.push({ id, ws, profileSlug });
+      if (await ws.exists('sections', 'index.json')) projects.push({ id, ws });
     }
-    const entries = await buildCatalog(new Workspace(opts.out), { projects });
-    console.log(`catalog: ${entries.length} sections from ${projects.length} project(s) → ${resolve(opts.out)}/index.html`);
+    await buildHub(home, { projects, catalog: (await home.exists('catalog', 'index.html')) ? 'catalog/index.html' : undefined });
+    const server = await serveDir(WORKDIR, { port: Number(opts.port), host: opts.host });
+    console.log(`\n  sectionforge → ${server.url}\n`);
+    for (const { id } of projects) {
+      console.log(`  ${id}`);
+      console.log(`    clone       ${server.url}projects/${id}/clone/index.html`);
+      console.log(`    styleguide  ${server.url}projects/${id}/design/styleguide.html`);
+    }
+    if (await home.exists('catalog', 'index.html')) console.log(`  catalog       ${server.url}catalog/index.html`);
+    console.log('\n  Ctrl+C to stop.');
   });
 
 program

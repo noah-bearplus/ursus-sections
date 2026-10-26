@@ -25,15 +25,28 @@ Trang đầu tiên đã convert: **details.so/inspo** → 6 section (header, her
 
 0 lỗi validate schema/Liquid trên cả 3 profile (Dawn, Horizon, Generic). Bản Liquid render thử (liquidjs + shim Shopify) lệch ≤ 0.17% so với bản HTML clone.
 
-## Cài đặt
+## Xem kết quả (không cần chạy lại pipeline)
+
+Cần Node ≥ 20 (`node -v`). Trong thư mục project:
 
 ```bash
 npm install
-# Playwright: dùng bản có sẵn trên máy, hoặc
-npm i -D playwright && npx playwright install chromium
+npm run view          # → mở http://127.0.0.1:4321
 ```
 
-Node ≥ 20. Không cần build — chạy TypeScript trực tiếp qua `tsx`.
+Trang đầu liệt kê mọi thứ trong `.sf/`: bản clone toàn trang, styleguide, độ giống bản gốc từng section (kèm ảnh gốc / clone / khác biệt), Liquid theo từng profile theme (render thử, file `.liquid`) và thư viện section. Phải mở qua `npm run view`, không mở file `.html` trực tiếp: trình duyệt chặn font và nút copy trên `file://`.
+
+`.sf/` là thư mục ẩn — Finder: `Cmd + Shift + .`; Windows Explorer: View → Hidden items.
+
+## Chạy lại pipeline
+
+```bash
+npm install
+npm run browsers      # tải Chromium cho Playwright (~150 MB, một lần)
+npm run sf -- run recipes/details-so-inspo.json --theme ../my-theme
+```
+
+Recipe details.so đọc trang đã lưu ở `sources/details-so-inspo/page.html` + `page_files/` (thư mục `sources/` không nằm trong git). Không cần build — chạy TypeScript trực tiếp qua `tsx`.
 
 ## Dùng
 
@@ -52,6 +65,9 @@ npm run sf -- batch recipes/*.json --concurrency 3 --theme ../my-theme
 
 # Gallery tĩnh (giống Osmo / byq.supply / Ursus): preview + copy Liquid
 npm run sf -- catalog --profile dawn
+
+# Server xem kết quả (= npm run view); --host 0.0.0.0 để mở từ máy khác trong mạng LAN
+npm run sf -- serve --port 4321
 ```
 
 Không có `--theme` → profile **Generic OS 2.0** (section tự chứa, chạy trên mọi theme Online Store 2.0).
@@ -73,6 +89,7 @@ Nguồn có thể là URL (crawl bằng Playwright, cuộn để kích hoạt la
 | `shopify/<theme>/single-file/` | mỗi section là **1 file** copy-paste (CSS/JS inline bằng `{% stylesheet %}`/`{% javascript %}`) |
 | `shopify/<theme>/preview/` | Liquid render thử + diff so với clone |
 | `.sf/catalog/` | gallery tĩnh |
+| `.sf/index.html` | trang tổng hợp kết quả (tạo bởi `npm run view`) |
 
 ## Section Liquid "đồng nhất với theme" nghĩa là gì
 

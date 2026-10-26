@@ -46,6 +46,8 @@ export interface OpenPageOptions {
   height?: number;
   javaScript?: boolean;
   colorScheme?: 'light' | 'dark';
+  /** Device pixel ratio (default 1, so screenshots map 1:1 to CSS pixels). */
+  scale?: number;
   /** Only allow requests to these origins (everything else is aborted). */
   allowOrigins?: string[];
 }
@@ -56,7 +58,7 @@ export async function openPage(url: string, opts: OpenPageOptions): Promise<{ pa
     viewport: { width: opts.width, height: opts.height ?? 900 },
     javaScriptEnabled: opts.javaScript ?? false,
     colorScheme: opts.colorScheme ?? 'light',
-    deviceScaleFactor: 1,
+    deviceScaleFactor: opts.scale ?? 1,
   });
   const page = await context.newPage();
   if (opts.allowOrigins) {

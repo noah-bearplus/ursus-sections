@@ -45,3 +45,15 @@ test('static rendering reproduces the source content', () => {
   assert.equal((out.match(/dtl-badge/g) ?? []).length, 1);
   assert.equal((out.match(/data-active/g) ?? []).length, 1);
 });
+
+test('static rendering rewrites asset paths that are not fields', () => {
+  const ir = {
+    key: 'hero', name: 'Hero', category: 'hero', rootClass: 'sf-dtl-hero', classPrefix: 'dtl-', css: '', js: '', behaviors: [], modes: null, assets: [], fonts: [], layout: 'full',
+    source: { url: '', selector: '' }, stats: { rulesKept: 0, rulesTotal: 0, elements: 0, cssBytes: 0 }, fields: [], repeaters: [],
+    template: '<div class="sf-dtl-hero" style="background:url(assets/bg.webp)"><img src="assets/avatar.webp" srcset="assets/avatar.webp 1x, assets/avatar@2x.webp 2x" alt=""></div>',
+  } as unknown as SectionIR;
+  const out = renderStatic(ir, { assetUrl: (p) => `../../snapshot/${p}` });
+  assert.match(out, /src="\.\.\/\.\.\/snapshot\/assets\/avatar\.webp"/);
+  assert.match(out, /srcset="\.\.\/\.\.\/snapshot\/assets\/avatar\.webp 1x, \.\.\/\.\.\/snapshot\/assets\/avatar@2x\.webp 2x"/);
+  assert.match(out, /url\(\.\.\/\.\.\/snapshot\/assets\/bg\.webp\)/);
+});

@@ -29,6 +29,7 @@
 | `convert` | snapshot + tokens | `sections/<key>/ir.json` … |
 | `clone` | IR | `clone/index.html`, `sections/<key>/preview.html`, styleguide kèm component |
 | `verify` | clone + snapshot | ảnh gốc/clone/diff từng section × viewport, `verify/report.json` |
+| `thumbs` | clone | `sections/<key>/thumb.jpg` (cắt đúng khung section, ảnh 2x) + `sections/thumbs.json` cho catalog |
 | `shopify` | IR + theme | `shopify/<profile>/theme`, `single-file`, `preview`, `report.json`, `README.md` |
 
 Cache key của stage = hash(tên stage, recipe, options, cacheKey riêng, key của stage phía trước). Đổi recipe hay đổi input → chỉ những stage bị ảnh hưởng chạy lại. Trong lúc phát triển, `convert/clone/verify/shopify` còn hash cả mã nguồn package.

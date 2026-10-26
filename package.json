@@ -10,6 +10,8 @@
   ],
   "scripts": {
     "sf": "tsx apps/cli/src/index.ts",
+    "view": "tsx apps/cli/src/index.ts serve",
+    "browsers": "playwright-core install chromium",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test packages/*/test/*.test.ts"
   },

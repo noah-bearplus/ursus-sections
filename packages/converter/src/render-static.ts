@@ -37,6 +37,18 @@ export function renderStatic(ir: SectionIR, opts: StaticRenderOptions = {}): str
   applyConditions(root, sectionValues);
   if (ir.modes) root.setAttribute(ir.modes.attribute, opts.mode ?? ir.modes.default);
 
+  // Static images / inline-style URLs that are not fields (e.g. decorative avatars).
+  for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+    for (const a of ['src', 'poster', 'href']) {
+      const v = el.getAttribute(a);
+      if (v?.startsWith('assets/')) el.setAttribute(a, asset(v));
+    }
+    const srcset = el.getAttribute('srcset');
+    if (srcset?.includes('assets/')) el.setAttribute('srcset', srcset.replace(/(^|[\s,])(assets\/[^\s,]+)/g, (_m, sep: string, p: string) => sep + asset(p)));
+    const style = el.getAttribute('style');
+    if (style?.includes('assets/')) el.setAttribute('style', style.replace(/assets\/[^"')\s]+/g, (p) => asset(p)));
+  }
+
   const html = root.outerHTML.replace(/<!--sf-repeat-(\d+)-->/g, (_m, i: string) => expanded[Number(i)] ?? '');
   return fill(html, ir.fields, sectionValues, asset, 0);
 }

@@ -1,3 +1,4 @@
+export * from './hub.ts';
 import { readFile } from 'node:fs/promises';
 import type { SectionIR, Workspace } from '@sf/core';
 import { escapeHtml } from '@sf/core';
@@ -15,6 +16,10 @@ export interface CatalogEntry {
   /** paths relative to the catalog root */
   preview: string;
   thumb?: string;
+  /** Thumbnail size in CSS pixels, when known */
+  thumbSize?: [number, number];
+  /** Page background behind the section, so letterboxed thumbnails blend in */
+  background?: string;
   liquid: string;
   liquidFile: string;
   diff?: number;
@@ -32,10 +37,13 @@ export async function buildCatalog(out: Workspace, input: CatalogInput): Promise
   await out.clean('.');
   const entries: CatalogEntry[] = [];
   for (const p of input.projects) {
-    const index = await p.ws.readJson<{ sections: string[] }>('sections', 'index.json');
+    const index = await p.ws.readJson<{ sections: string[]; page?: { background?: Record<string, string> } }>('sections', 'index.json');
     const report = await p.ws
       .readJson<{ sections: { key: string; handle: string; visualDiff?: number; blockTypes: string[]; settings: number }[] }>('shopify', p.profileSlug, 'report.json')
       .catch(() => null);
+    const thumbs = await p.ws
+      .readJson<Record<string, { file: string; width: number; height: number }>>('sections', 'thumbs.json')
+      .catch(() => ({}) as Record<string, { file: string; width: number; height: number }>);
     // Copy assets the previews need, once per project.
     await out.copyIn(p.ws.path('snapshot', 'assets'), `${p.id}/snapshot/assets`);
     for (const key of index.sections) {
@@ -46,11 +54,19 @@ export async function buildCatalog(out: Workspace, input: CatalogInput): Promise
       const liquid = await readFile(liquidPath, 'utf8').catch(() => '');
       await out.copyIn(p.ws.path('sections', key, 'preview.html'), `${p.id}/sections/${key}/preview.html`);
       await out.write(`${p.id}/liquid/${handle}.liquid`, liquid);
-      const thumbSrc = p.ws.path('shopify', p.profileSlug, 'preview', `${handle}.clone.png`);
+      // Prefer the section-cropped thumbnail; fall back to the full preview screenshot.
+      const t = thumbs[key];
       let thumb: string | undefined;
+      let thumbSize: [number, number] | undefined;
       try {
-        await out.copyIn(thumbSrc, `${p.id}/thumbs/${handle}.png`);
-        thumb = `${p.id}/thumbs/${handle}.png`;
+        if (t) {
+          await out.copyIn(p.ws.path(t.file), `${p.id}/thumbs/${handle}.jpg`);
+          thumb = `${p.id}/thumbs/${handle}.jpg`;
+          thumbSize = [t.width, t.height];
+        } else {
+          await out.copyIn(p.ws.path('shopify', p.profileSlug, 'preview', `${handle}.clone.png`), `${p.id}/thumbs/${handle}.png`);
+          thumb = `${p.id}/thumbs/${handle}.png`;
+        }
       } catch {
         thumb = undefined;
       }
@@ -66,6 +82,8 @@ export async function buildCatalog(out: Workspace, input: CatalogInput): Promise
         blocks: r?.blockTypes ?? ir.repeaters.map((x) => x.blockType),
         preview: `${p.id}/sections/${key}/preview.html`,
         thumb,
+        thumbSize,
+        background: index.page?.background?.[ir.modes?.default ?? 'light'],
         liquid,
         liquidFile: `${p.id}/liquid/${handle}.liquid`,
         diff: r?.visualDiff,
@@ -94,12 +112,16 @@ a { color: inherit; text-decoration: none; }
 function galleryPage(entries: CatalogEntry[]): string {
   const cats = [...new Set(entries.map((e) => e.category))];
   const cards = entries
-    .map(
-      (e) => `<a class="card" href="${e.project}/${e.handle}.html" data-cat="${e.category}">
-  <div class="thumb">${e.thumb ? `<img src="${e.thumb}" alt="" loading="lazy">` : ''}</div>
+    .map((e) => {
+      // Short full-width strips (headers, filter bars) span the row so they keep a readable scale.
+      const ratio = e.thumbSize ? e.thumbSize[0] / e.thumbSize[1] : 0;
+      const wide = ratio >= 5;
+      const vars = [e.thumbSize && `--ar: ${e.thumbSize[0]} / ${e.thumbSize[1]}`, e.background && `--thumb-bg: ${e.background}`].filter(Boolean).join('; ');
+      return `<a class="card${wide ? ' card--wide' : ratio > 1.6 ? ' card--landscape' : ''}" href="${e.project}/${e.handle}.html" data-cat="${e.category}">
+  <div class="thumb"${vars ? ` style="${vars}"` : ''}>${e.thumb ? `<img src="${e.thumb}" alt="" loading="lazy">` : ''}</div>
   <div class="meta"><div><strong>${escapeHtml(e.name)}</strong><span>${escapeHtml(e.category)} · ${e.settings} settings${e.blocks.length ? ` · ${e.blocks.join(', ')} blocks` : ''}</span></div><span class="tag">.liquid</span></div>
-</a>`,
-    )
+</a>`;
+    })
     .join('\n');
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Section Library</title>
@@ -107,11 +129,17 @@ function galleryPage(entries: CatalogEntry[]): string {
 .hero { padding: 72px 0 32px; }
 .hero h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.02; letter-spacing: -.03em; font-weight: 600; max-width: 16ch; }
 .hero p { color: var(--muted); margin-top: 14px; max-width: 58ch; font-size: 17px; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 20px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 12px; }
+.toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 28px 0 20px; }
+.filters, .views { display: flex; flex-wrap: wrap; gap: 8px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.grid[data-view="grid"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 12px; }
+.grid[data-view="grid"] .card--wide { grid-column: 1 / -1; }
 .card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; transition: border-color .2s, transform .2s; }
 .card:hover { border-color: #3d3936; transform: translateY(-2px); }
-.thumb { aspect-ratio: 16 / 10; background: var(--panel-2); overflow: hidden; }
+/* An explicit width keeps max-height from shrinking the width through aspect-ratio. */
+.thumb { width: 100%; aspect-ratio: var(--ar, 16 / 10); max-height: 640px; background: var(--thumb-bg, var(--panel-2)); overflow: hidden; }
+.grid[data-view="grid"] .card:not(.card--wide) .thumb { aspect-ratio: 16 / 10; }
+.grid[data-view="grid"] .card--landscape .thumb img { object-fit: contain; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
 .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; }
 .meta strong { display: block; font-weight: 560; }
@@ -121,8 +149,11 @@ function galleryPage(entries: CatalogEntry[]): string {
 <header class="top"><a class="brand" href="index.html">section<span>forge</span></a><span style="color:var(--muted);font-size:13px">${entries.length} sections</span></header>
 <main class="wrap">
   <section class="hero"><h1>Sections, ready for your theme.</h1><p>Every section is converted from a real design, scoped so it cannot clash with your theme, and generated as Liquid that follows your theme's own conventions. Preview it, then copy one file.</p></section>
-  <div class="filters"><button class="pill" aria-pressed="true" data-filter="all">All</button>${cats.map((c) => `<button class="pill" aria-pressed="false" data-filter="${c}">${escapeHtml(c)}</button>`).join('')}</div>
-  <div class="grid">${cards}</div>
+  <div class="toolbar">
+    <div class="filters"><button class="pill" aria-pressed="true" data-filter="all">All</button>${cats.map((c) => `<button class="pill" aria-pressed="false" data-filter="${c}">${escapeHtml(c)}</button>`).join('')}</div>
+    <div class="views"><button class="pill" aria-pressed="true" data-view="large">Large</button><button class="pill" aria-pressed="false" data-view="grid">Grid</button></div>
+  </div>
+  <div class="grid" data-view="large">${cards}</div>
 </main>
 <script>
 document.querySelectorAll('[data-filter]').forEach(function (b) {
@@ -132,6 +163,13 @@ document.querySelectorAll('[data-filter]').forEach(function (b) {
     document.querySelectorAll('.card').forEach(function (c) { c.style.display = f === 'all' || c.dataset.cat === f ? '' : 'none'; });
   });
 });
+function setView(v) {
+  document.querySelector('.grid').dataset.view = v;
+  document.querySelectorAll('.views [data-view]').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.view === v)); });
+  try { localStorage.setItem('sf-catalog-view', v); } catch (e) {}
+}
+document.querySelectorAll('.views [data-view]').forEach(function (b) { b.addEventListener('click', function () { setView(b.dataset.view); }); });
+try { var saved = localStorage.getItem('sf-catalog-view'); if (saved === 'grid' || saved === 'large') setView(saved); } catch (e) {}
 </script>
 </body></html>`;
 }
