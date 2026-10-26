@@ -1,0 +1,19 @@
+{
+  "name": "@sf/converter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "postcss": "^8.4.49",
+    "postcss-selector-parser": "^7.0.0",
+    "postcss-value-parser": "^4.2.0",
+    "linkedom": "^0.18.5",
+    "@sf/core": "*",
+    "@sf/crawler": "*",
+    "@sf/design": "*"
+  }
+}

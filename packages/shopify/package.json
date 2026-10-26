@@ -1,0 +1,19 @@
+{
+  "name": "@sf/shopify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "liquidjs": "^10.19.0",
+    "linkedom": "^0.18.5",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "@sf/core": "*",
+    "@sf/converter": "*",
+    "@sf/crawler": "*"
+  }
+}

@@ -1,0 +1,483 @@
+{
+  "id": "details-so-inspo",
+  "name": "Details.so — Inspo",
+  "prefix": "dtl",
+  "source": {
+    "url": "https://www.details.so/inspo",
+    "savedHtml": "../sources/details-so-inspo/page.html",
+    "savedAssetsDir": "../sources/details-so-inspo/page_files"
+  },
+  "viewports": {
+    "desktop": 1440,
+    "mobile": 390
+  },
+  "modes": {
+    "selector": "html",
+    "attribute": "data-theme",
+    "values": [
+      "dark",
+      "light"
+    ],
+    "default": "dark"
+  },
+  "state": {
+    "htmlAttrs": {
+      "data-auth-shell-hint": "guest",
+      "data-tier": "free"
+    }
+  },
+  "captureCss": "html, body { overflow: visible !important; height: auto !important; } .app { height: auto !important; min-height: 0 !important; overflow: visible !important; } #swup { overflow: visible !important; height: auto !important; max-height: none !important; } .onboarding-tour, .navigation-loading, .back-to-top, .ui-tooltip, .toast-root { display: none !important; }",
+  "sections": [
+    {
+      "key": "header",
+      "name": "Details · Header",
+      "category": "header",
+      "description": "Floating app bar: logo, pill navigation with a live badge, search island and guest actions.",
+      "selector": ".app > header",
+      "remove": [
+        ".header-dim",
+        ".island-action",
+        "[data-island-pane=vault-detail]",
+        "[data-island-pane=pricing]",
+        ".search-spinner",
+        ".search-status",
+        ".search-clear",
+        "#menu-dropdown",
+        "#account-dropdown",
+        ".referral-header-action",
+        "[data-auth-user]"
+      ],
+      "prepare": [
+        {
+          "selector": ".search-trigger",
+          "retag": "a",
+          "setAttr": {
+            "href": "/search"
+          },
+          "removeAttr": [
+            "aria-controls",
+            "aria-expanded",
+            "aria-haspopup",
+            "aria-keyshortcuts",
+            "type"
+          ]
+        },
+        {
+          "selector": ".account-trigger, .menu-trigger",
+          "removeAttr": [
+            "aria-controls",
+            "aria-expanded",
+            "aria-haspopup"
+          ]
+        }
+      ],
+      "repeaters": [
+        {
+          "item": ".nav > a",
+          "blockType": "nav_link",
+          "blockName": "Navigation link",
+          "max": 6
+        }
+      ],
+      "fields": {
+        ".brand--desktop": {
+          "id": "logo_link",
+          "label": "Logo link",
+          "group": "Logo"
+        },
+        ".brand--desktop .visually-hidden": {
+          "id": "brand_name",
+          "label": "Brand name (screen readers)",
+          "group": "Logo"
+        },
+        ".nav-mcp .mcp-navigation-label > span:first-child": {
+          "id": "feature_label",
+          "label": "Feature label",
+          "group": "Navigation"
+        },
+        ".mcp-navigation-label__badge > span": {
+          "id": "feature_badge",
+          "label": "Feature badge",
+          "group": "Navigation"
+        },
+        "[data-island-search-prefix]": {
+          "id": "search_prefix",
+          "label": "Search prefix",
+          "group": "Search"
+        },
+        "[data-island-search-example]": {
+          "id": "search_example",
+          "label": "Search example",
+          "group": "Search"
+        },
+        ".pricing-link": {
+          "id": "secondary_link",
+          "label": "Secondary link",
+          "group": "Actions"
+        },
+        ".guest .is--primary": {
+          "id": "login_link",
+          "label": "Login link",
+          "group": "Actions"
+        },
+        ".guest .is--secondary": {
+          "id": "signup_link",
+          "label": "Sign-up link",
+          "group": "Actions"
+        },
+        ".nav > a": {
+          "id": "link",
+          "label": "Link"
+        }
+      }
+    },
+    {
+      "key": "hero",
+      "name": "Details · Hero",
+      "category": "hero",
+      "description": "Centered display heading with subtitle, animated arrow CTA and member avatars.",
+      "selector": "#swup > section.hero",
+      "prepare": [
+        {
+          "selector": "[data-hero-enter]",
+          "removeAttr": [
+            "data-hero-enter",
+            "data-enter-complete"
+          ]
+        }
+      ],
+      "fields": {
+        "h1": {
+          "id": "heading",
+          "label": "Heading"
+        },
+        ".hero-subtitle": {
+          "id": "subheading",
+          "label": "Subheading"
+        },
+        "[data-hero-cta=guest]": {
+          "id": "button_link",
+          "label": "Button link",
+          "group": "Button"
+        },
+        "[data-hero-cta=guest] .animated-cta__label": {
+          "id": "button_label",
+          "label": "Button label",
+          "group": "Button"
+        },
+        ".hero-member-avatars": false,
+        ".hero-membership-note > span:last-child": {
+          "id": "members_text",
+          "label": "Social proof text",
+          "group": "Social proof"
+        }
+      },
+      "repeaters": []
+    },
+    {
+      "key": "filters",
+      "name": "Details · Filter pills",
+      "category": "filter",
+      "description": "Horizontally scrolling category pills with a sort dropdown.",
+      "selector": "#swup > .quick-access-shell",
+      "prepare": [
+        {
+          "selector": "[data-hero-enter]",
+          "removeAttr": [
+            "data-hero-enter",
+            "data-enter-complete"
+          ]
+        }
+      ],
+      "repeaters": [
+        {
+          "item": ".quick-access-shell__items > a",
+          "blockType": "pill",
+          "blockName": "Filter pill",
+          "max": 24
+        }
+      ],
+      "keep": [
+        "#inspo-sort-dropdown"
+      ],
+      "fields": {
+        "[data-feed-sort-label]": {
+          "id": "sort_label",
+          "label": "Sort label",
+          "group": "Sort menu"
+        },
+        ".ui-dropdown__item-trailing": false,
+        ".ui-dropdown__item-icon": false,
+        ".more-filters .pill-surface": {
+          "id": "more_label",
+          "label": "More button label"
+        },
+        ".quick-access-shell__items > a .pill-surface": {
+          "id": "label",
+          "label": "Label"
+        },
+        ".quick-access-shell__items > a": {
+          "id": "link",
+          "label": "Link"
+        }
+      },
+      "behaviors": [
+        {
+          "type": "dropdown",
+          "roles": {
+            "trigger": "#inspo-sort-trigger",
+            "menu": "#inspo-sort-dropdown",
+            "option": ".ui-dropdown__item",
+            "label": "[data-feed-sort-label]",
+            "option-label": ".ui-dropdown__item-label"
+          }
+        },
+        {
+          "type": "drag-scroll",
+          "roles": {
+            "track": ".quick-access-shell__items"
+          }
+        }
+      ]
+    },
+    {
+      "key": "grid",
+      "name": "Details · Inspiration grid",
+      "category": "grid",
+      "description": "Two-column grid of framed website captures with hover-to-play video, favicon, title and tags.",
+      "selector": "#swup > .grid-container",
+      "remove": [
+        ".card-meta-actions",
+        ".card-video-play",
+        ".card-video-restart"
+      ],
+      "prepare": [
+        {
+          "selector": "video.card-media",
+          "removeClass": [
+            "is-ready",
+            "has-frame"
+          ],
+          "removeAttr": [
+            "src",
+            "poster",
+            "data-should-play",
+            "data-grid-video-preload-zone"
+          ],
+          "setAttr": {
+            "preload": "none"
+          }
+        },
+        {
+          "selector": ".media-wrapper",
+          "removeStyle": [
+            "background-image",
+            "background-size",
+            "background-position"
+          ]
+        },
+        {
+          "selector": ".card-preview-still",
+          "setAttr": {
+            "data-loaded": ""
+          },
+          "removeAttr": [
+            "fetchpriority"
+          ]
+        }
+      ],
+      "repeaters": [
+        {
+          "item": ".card",
+          "blockType": "card",
+          "blockName": "Inspiration card",
+          "presetCount": 12,
+          "max": 50
+        }
+      ],
+      "fields": {
+        ".card-preview-still": {
+          "id": "image",
+          "label": "Preview image"
+        },
+        "video.card-media": {
+          "id": "video_url",
+          "label": "Hover video URL",
+          "info": "MP4 played on hover. Upload under Content → Files and paste the URL."
+        },
+        ".card-favicon": {
+          "id": "icon",
+          "label": "Site icon"
+        },
+        ".card-title": {
+          "id": "title",
+          "label": "Title"
+        },
+        ".card-tags": {
+          "id": "tags",
+          "label": "Tags"
+        },
+        ".card-link": {
+          "id": "link",
+          "label": "Link"
+        }
+      },
+      "behaviors": [
+        {
+          "type": "hover-video",
+          "roles": {
+            "item": ".card",
+            "video": "video.card-media"
+          },
+          "options": {
+            "readyClass": "is-ready"
+          }
+        }
+      ]
+    },
+    {
+      "key": "faq",
+      "name": "Details · FAQ & CTA",
+      "category": "faq",
+      "description": "Intro, animated accordion, upgrade CTA and a cloud of related links.",
+      "selector": "#swup > section.inspo-post-gate",
+      "repeaters": [
+        {
+          "item": ".faq-item",
+          "blockType": "question",
+          "blockName": "Question",
+          "max": 20
+        },
+        {
+          "item": ".related-list > li",
+          "blockType": "related_link",
+          "blockName": "Related link",
+          "max": 20
+        }
+      ],
+      "fields": {
+        ".inspo-post-gate__intro h2": {
+          "id": "heading",
+          "label": "Heading",
+          "group": "Intro"
+        },
+        ".inspo-post-gate__intro p": {
+          "id": "text",
+          "label": "Text",
+          "group": "Intro"
+        },
+        ".faq-question > span:first-child": {
+          "id": "question",
+          "label": "Question"
+        },
+        ".faq-answer-inner": {
+          "id": "answer",
+          "label": "Answer"
+        },
+        ".inspo-post-gate__conversion h3": {
+          "id": "cta_heading",
+          "label": "CTA heading",
+          "group": "Call to action"
+        },
+        ".inspo-post-gate__conversion .animated-cta": {
+          "id": "button_link",
+          "label": "Button link",
+          "group": "Call to action"
+        },
+        ".inspo-post-gate__conversion .animated-cta__label": {
+          "id": "button_label",
+          "label": "Button label",
+          "group": "Call to action"
+        },
+        ".inspo-post-gate__related-label": {
+          "id": "related_heading",
+          "label": "Related heading",
+          "group": "Related links"
+        },
+        ".inspo-post-gate__related-link": {
+          "id": "link",
+          "label": "Link"
+        }
+      },
+      "behaviors": [
+        {
+          "type": "accordion",
+          "roles": {
+            "item": ".faq-item",
+            "trigger": ".faq-question"
+          },
+          "options": {
+            "openAttr": "data-open",
+            "single": false
+          }
+        }
+      ]
+    },
+    {
+      "key": "footer",
+      "name": "Details · Footer",
+      "category": "footer",
+      "description": "Link columns, newsletter signup, oversized brand statement and outline logo.",
+      "selector": "#swup > footer.footer",
+      "prepare": [
+        {
+          "selector": ".link-group > span:first-child",
+          "wrap": "div.group-heading"
+        }
+      ],
+      "repeaters": [
+        {
+          "item": ".top-wrapper .link-group",
+          "blockType": "link_group",
+          "blockName": "Link column",
+          "max": 6
+        }
+      ],
+      "fields": {
+        ".group-heading > span:first-child": {
+          "id": "heading",
+          "label": "Heading"
+        },
+        ".group-heading .new-badge": {
+          "id": "badge",
+          "label": "Badge"
+        },
+        ".newsletter-wrapper > span": {
+          "id": "newsletter_heading",
+          "label": "Heading",
+          "group": "Newsletter"
+        },
+        ".newsletter-wrapper > p": {
+          "id": "newsletter_text",
+          "label": "Text",
+          "group": "Newsletter"
+        },
+        ".bottom-wrapper h2": {
+          "id": "statement",
+          "label": "Statement",
+          "group": "Brand"
+        },
+        ".swiss-text > span": {
+          "id": "badge_title",
+          "label": "Badge title",
+          "group": "Brand"
+        },
+        ".swiss-text > p": {
+          "id": "badge_text",
+          "label": "Badge text",
+          "group": "Brand"
+        },
+        ".email-form input[type=email]": {
+          "id": "email_placeholder",
+          "label": "Email placeholder",
+          "group": "Newsletter"
+        },
+        "[data-email-button-label]": {
+          "id": "submit_label",
+          "label": "Submit label",
+          "group": "Newsletter"
+        }
+      }
+    }
+  ]
+}

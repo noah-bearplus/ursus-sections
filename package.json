@@ -1,0 +1,27 @@
+{
+  "name": "sectionforge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Crawl a web design, convert it into clean HTML sections and theme-consistent Shopify Liquid sections.",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "sf": "tsx apps/cli/src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test packages/*/test/*.test.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/culori": "^4.0.1",
+    "@types/node": "^22.10.0",
+    "@types/pngjs": "^6.0.5",
+    "playwright-core": "^1.63.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

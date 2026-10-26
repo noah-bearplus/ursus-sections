@@ -1,0 +1,18 @@
+{
+  "name": "@sf/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "sf": "src/index.ts"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "@sf/core": "*",
+    "@sf/crawler": "*",
+    "@sf/design": "*",
+    "@sf/converter": "*",
+    "@sf/shopify": "*",
+    "@sf/catalog": "*"
+  }
+}
