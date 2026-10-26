@@ -19,6 +19,14 @@ test('pipeline runs dependencies in order and caches by key', async () => {
   assert.deepEqual(await p.run({ ws, recipe, options: {} }, ['b']), { a: 'cached', b: 'cached' });
   assert.deepEqual(await p.run({ ws, recipe: { ...recipe, name: 'changed' }, options: {} }, ['b']), { a: 'ran', b: 'ran' });
   assert.deepEqual(calls, ['a', 'b', 'a', 'b']);
+  // Options only invalidate the stages that declare them.
+  const q = new Pipeline([
+    { name: 'a', dependsOn: [], outputs: ['a.txt'], run: async () => void calls.push('a') },
+    { name: 'c', dependsOn: ['a'], outputs: [], options: ['themeDir'], run: async () => void calls.push('c') },
+  ]);
+  calls.length = 0;
+  await q.run({ ws, recipe, options: { themeDir: 'x' } });
+  assert.deepEqual(await q.run({ ws, recipe, options: { themeDir: 'y' } }), { a: 'cached', c: 'ran' });
 });
 
 test('local queue retries and reports', async () => {

@@ -22,6 +22,8 @@ export interface StageDef {
   dependsOn: string[];
   /** Workspace-relative files that must exist for the cached result to be reused. */
   outputs: string[];
+  /** Pipeline option keys this stage reads (only these are part of its cache key). */
+  options?: string[];
   /** Extra material folded into the cache key (e.g. hashes of external inputs). */
   cacheKey?: (ctx: StageContext) => Promise<string> | string;
   run: (ctx: StageContext) => Promise<void>;
@@ -87,7 +89,7 @@ export class Pipeline {
         JSON.stringify({
           name,
           recipe: ctx.recipe,
-          options: { ...ctx.options, force: undefined },
+          options: Object.fromEntries((stage.options ?? []).map((k) => [k, ctx.options[k]])),
           extra,
           upstream: stage.dependsOn.map((d) => keys.get(d)),
         }),

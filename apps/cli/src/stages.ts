@@ -117,6 +117,7 @@ export function buildPipeline(): Pipeline {
       name: 'shopify',
       dependsOn: ['clone'],
       outputs: [],
+      options: ['themeDir'],
       cacheKey: () => sourceVersion(),
       run: async ({ ws, recipe, log, options }) => {
         const { sections, page } = await loadSections(ws);
